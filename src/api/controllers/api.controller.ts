@@ -1,4 +1,5 @@
-import { INTERNAL_SERVER_ERROR } from "../constants/http"
+import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, OK } from "../constants/http"
+import { createMockData, deleteMockData, getServiceHealth, patchMockData } from "../services/api.services"
 import appAssert from "../utils/appAssert"
 import AppError from "../utils/AppError"
 import catchErrors from "../utils/catchErrors"
@@ -6,24 +7,24 @@ import catchErrors from "../utils/catchErrors"
 
 
 export const GetHandler = catchErrors( async (_, res) => {
-      res.json({
-            message: 'Health check. Get works!'
+
+      const healthMessage = await getServiceHealth()
+
+      res.status(OK).json({
+            message: healthMessage
       })
 })
 
 export const PostHandler = catchErrors(async (req, res) =>{
       const { data } = req.body
 
-      if(!data) {
-            throw new AppError(INTERNAL_SERVER_ERROR, 'Data is required')
-      }
+      appAssert(data, BAD_REQUEST, 'Data is required')
 
-      const newMockData = {
-            newData: data,
-            createdAt: new Date()
-      }
+      const newMockData = await createMockData(data)
 
-      res.json({
+      appAssert(newMockData, INTERNAL_SERVER_ERROR, 'Something went wrong...')
+
+      res.status(CREATED).json({
             message: "Health check. Post works!",
             body: newMockData
       })
@@ -32,34 +33,29 @@ export const PostHandler = catchErrors(async (req, res) =>{
 export const PatchHandler = catchErrors(async (req, res) =>{
       const { data } = req.body
 
-      if(!data) {
-            throw new AppError(INTERNAL_SERVER_ERROR, 'Data is required')
-      }
+      appAssert(data, BAD_REQUEST, 'Data is required')
 
-      const patchMockData = {
-            patchedData: data,
-            updatedAt: new Date()
-      }
+      const patchedMockData = await patchMockData(data)
 
+      appAssert(patchedMockData, INTERNAL_SERVER_ERROR, 'Something went wrong...')
+      
       res.json({
             message:'Health check. Patch works!',
-            body: patchMockData
+            body: patchedMockData
       })
 })
 
 export const DeleteHandler = catchErrors(async (req, res) => {
       const { data } = req.body
 
-      if(!data) {
-            throw new AppError(INTERNAL_SERVER_ERROR, 'Data is required')
-      }
+      appAssert(data, BAD_REQUEST, 'Data is required')
 
-      const deleteMockData = {
-            deletedData: data,
-            deletedAt: new Date()
-      }
+      const deletedMockData = await deleteMockData(data)
+
+      appAssert(deletedMockData, INTERNAL_SERVER_ERROR, 'Something went wrong...')
+
       res.json({
             message:'Health check. Delete works!',
-            body: deleteMockData
+            body: deletedMockData
       })
 })
